@@ -31,20 +31,27 @@ module.exports = function(options) {
   var getFromOptionsOrDefaults = function(key) {
     return options[key] || defaults[key];
   };
-  var getJiraIssueLocation = function(location, type, scope, jiraWithDecorators, subject) {
-    switch(location) {
-      case 'pre-type':
-        return jiraWithDecorators + type + scope + ': ' + subject;
-        break;
-      case 'pre-description':
-        return type + scope + ': ' + jiraWithDecorators + subject;
-        break;
-      case 'post-description':
-        return type + scope + ': ' + subject + ' ' + jiraWithDecorators;
-        break;
-      default:
-        return type + scope + ': ' + jiraWithDecorators + subject;
-    }
+  var getJiraIssueLocation = function(
+    location,
+    type,
+    scope,
+    jiraWithDecorators,
+    subject
+  ) {
+    return `${type}(${jiraWithDecorators}): ${subject}`;
+    // switch(location) {
+    //   case 'pre-type':
+    //     return jiraWithDecorators + type + scope + ': ' + subject;
+    //     break;
+    //   case 'pre-description':
+    //     return type + scope + ': ' + jiraWithDecorators + subject;
+    //     break;
+    //   case 'post-description':
+    //     return type + scope + ': ' + subject + ' ' + jiraWithDecorators;
+    //     break;
+    //   default:
+    //     return type + scope + ': ' + jiraWithDecorators + subject;
+    // }
   };
   var types = getFromOptionsOrDefaults('types');
 
@@ -59,21 +66,25 @@ module.exports = function(options) {
   const minHeaderWidth = getFromOptionsOrDefaults('minHeaderWidth');
   const maxHeaderWidth = getFromOptionsOrDefaults('maxHeaderWidth');
 
-  const branchName = execSync('git branch --show-current').toString().trim();
-  const jiraIssueRegex = /(?<jiraIssue>(?<!([A-Z0-9]{1,10})-?)[A-Z0-9]+-\d+)/;
+  const branchName = execSync('git branch --show-current')
+    .toString()
+    .trim();
+  const jiraIssueRegex = /(?<jiraIssue>(?<!([a-zA-Z0-9]{1,10})-?)[a-zA-Z0-9]+-\d+)/;
   const matchResult = branchName.match(jiraIssueRegex);
   const jiraIssue =
-    matchResult && matchResult.groups && matchResult.groups.jiraIssue;
+    matchResult &&
+    matchResult.groups &&
+    matchResult.groups.jiraIssue.toLowerCase();
   const hasScopes =
     options.scopes &&
     Array.isArray(options.scopes) &&
     options.scopes.length > 0;
   const customScope = !options.skipScope && hasScopes && options.customScope;
-  const scopes = customScope ? [...options.scopes, 'custom' ]: options.scopes;
+  const scopes = customScope ? [...options.scopes, 'custom'] : options.scopes;
 
   var getProvidedScope = function(answers) {
     return answers.scope === 'custom' ? answers.customScope : answers.scope;
-  }
+  };
 
   return {
     // When a user runs `git cz`, prompter will
@@ -109,22 +120,20 @@ module.exports = function(options) {
           type: 'input',
           name: 'jira',
           message:
-            'Enter JIRA issue (' +
-            getFromOptionsOrDefaults('jiraPrefix') +
-            '-12345)' +
+            'Enter JIRA issue' +
             (options.jiraOptional ? ' (optional)' : '') +
             ':',
           when: options.jiraMode,
-          default: jiraIssue || '',
-          validate: function(jira) {
-            return (
-              (options.jiraOptional && !jira) ||
-              /^(?<!([A-Z0-9]{1,10})-?)[A-Z0-9]+-\d+$/.test(jira)
-            );
-          },
-          filter: function(jira) {
-            return jira.toUpperCase();
-          }
+          default: jiraIssue || ''
+          // validate: function(jira) {
+          //   return (
+          //     (options.jiraOptional && !jira) ||
+          //     /^(?<!([A-Z0-9]{1,10})-?)[A-Z0-9]+-\d+$/.test(jira)
+          //   );
+          // },
+          // filter: function(jira) {
+          //   return jira.toUpperCase();
+          // }
         },
         {
           type: hasScopes ? 'list' : 'input',
@@ -142,7 +151,7 @@ module.exports = function(options) {
         {
           type: 'input',
           name: 'customScope',
-          when: (({ scope }) => scope === 'custom'),
+          when: ({ scope }) => scope === 'custom',
           message: 'Type custom scope (press enter to skip)'
         },
         {
@@ -152,7 +161,7 @@ module.exports = function(options) {
           default: options.defaultSubject,
           maxLength: maxHeaderWidth - (options.exclamationMark ? 1 : 0),
           leadingLabel: answers => {
-            const jira = answers.jira ? ` ${answers.jira}` : '';
+            const jira = answers.jira ? `${answers.jira.trim()}` : '';
 
             let scope = '';
             const providedScope = getProvidedScope(answers);
@@ -160,7 +169,8 @@ module.exports = function(options) {
               scope = `(${providedScope})`;
             }
 
-            return `${answers.type}${scope}:${jira}`;
+            // return `${answers.type}${scope}:${jira}`;
+            return `${answers.type}(${jira}):`;
           },
           validate: input =>
             input.length >= minHeaderWidth ||
@@ -185,7 +195,8 @@ module.exports = function(options) {
         {
           type: 'confirm',
           name: 'isBreaking',
-          message: 'You do know that this will bump the major version, are you sure?',
+          message:
+            'You do know that this will bump the major version, are you sure?',
           default: false,
           when: function(answers) {
             return answers.isBreaking;
@@ -245,12 +256,20 @@ module.exports = function(options) {
         scope = addExclamationMark ? scope + '!' : scope;
 
         // Get Jira issue prepend and append decorators
-        var prepend = options.jiraPrepend || ''
-        var append = options.jiraAppend || ''
-        var jiraWithDecorators = answers.jira ? prepend + answers.jira + append + ' ': '';
+        var prepend = options.jiraPrepend || '';
+        var append = options.jiraAppend || '';
+        var jiraWithDecorators = answers.jira
+          ? prepend + answers.jira + append
+          : '';
 
         // Hard limit this line in the validate
-        const head = getJiraIssueLocation(options.jiraLocation, answers.type, scope, jiraWithDecorators, answers.subject);
+        const head = getJiraIssueLocation(
+          options.jiraLocation,
+          answers.type,
+          scope,
+          jiraWithDecorators,
+          answers.subject
+        );
 
         // Wrap these lines at options.maxLineWidth characters
         var body = answers.body ? wrap(answers.body, wrapOptions) : false;
