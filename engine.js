@@ -185,60 +185,60 @@ module.exports = function(options) {
           message:
             'Provide a longer description of the change: (press enter to skip)\n',
           default: options.defaultBody
-        },
-        {
-          type: 'confirm',
-          name: 'isBreaking',
-          message: 'Are there any breaking changes?',
-          default: false
-        },
-        {
-          type: 'confirm',
-          name: 'isBreaking',
-          message:
-            'You do know that this will bump the major version, are you sure?',
-          default: false,
-          when: function(answers) {
-            return answers.isBreaking;
-          }
-        },
-        {
-          type: 'input',
-          name: 'breaking',
-          message: 'Describe the breaking changes:\n',
-          when: function(answers) {
-            return answers.isBreaking;
-          }
-        },
-
-        {
-          type: 'confirm',
-          name: 'isIssueAffected',
-          message: 'Does this change affect any open issues?',
-          default: options.defaultIssues ? true : false,
-          when: !options.jiraMode
-        },
-        {
-          type: 'input',
-          name: 'issuesBody',
-          default: '-',
-          message:
-            'If issues are closed, the commit requires a body. Please enter a longer description of the commit itself:\n',
-          when: function(answers) {
-            return (
-              answers.isIssueAffected && !answers.body && !answers.breakingBody
-            );
-          }
-        },
-        {
-          type: 'input',
-          name: 'issues',
-          message: 'Add issue references (e.g. "fix #123", "re #123".):\n',
-          when: function(answers) {
-            return answers.isIssueAffected;
-          },
-          default: options.defaultIssues ? options.defaultIssues : undefined
         }
+        // {
+        //   type: 'confirm',
+        //   name: 'isBreaking',
+        //   message: 'Are there any breaking changes?',
+        //   default: false
+        // },
+        // {
+        //   type: 'confirm',
+        //   name: 'isBreaking',
+        //   message:
+        //     'You do know that this will bump the major version, are you sure?',
+        //   default: false,
+        //   when: function(answers) {
+        //     return answers.isBreaking;
+        //   }
+        // },
+        // {
+        //   type: 'input',
+        //   name: 'breaking',
+        //   message: 'Describe the breaking changes:\n',
+        //   when: function(answers) {
+        //     return answers.isBreaking;
+        //   }
+        // },
+
+        // {
+        //   type: 'confirm',
+        //   name: 'isIssueAffected',
+        //   message: 'Does this change affect any open issues?',
+        //   default: options.defaultIssues ? true : false,
+        //   when: !options.jiraMode
+        // },
+        // {
+        //   type: 'input',
+        //   name: 'issuesBody',
+        //   default: '-',
+        //   message:
+        //     'If issues are closed, the commit requires a body. Please enter a longer description of the commit itself:\n',
+        //   when: function(answers) {
+        //     return (
+        //       answers.isIssueAffected && !answers.body && !answers.breakingBody
+        //     );
+        //   }
+        // },
+        // {
+        //   type: 'input',
+        //   name: 'issues',
+        //   message: 'Add issue references (e.g. "fix #123", "re #123".):\n',
+        //   when: function(answers) {
+        //     return answers.isIssueAffected;
+        //   },
+        //   default: options.defaultIssues ? options.defaultIssues : undefined
+        // }
       ]).then(async function(answers) {
         var wrapOptions = {
           trim: true,
@@ -293,17 +293,17 @@ module.exports = function(options) {
         console.log(chalk.underline('Commit preview:'));
         console.log(boxen(chalk.green(fullCommit), { padding: 1, margin: 1 }));
 
-        const { doCommit } = await cz.prompt([
-          {
-            type: 'confirm',
-            name: 'doCommit',
-            message: 'Are you sure that you want to commit?'
-          }
-        ]);
+        // const { doCommit } = await cz.prompt([
+        //   {
+        //     type: 'confirm',
+        //     name: 'doCommit',
+        //     message: 'Are you sure that you want to commit?'
+        //   }
+        // ]);
 
-        if (doCommit) {
-          commit(fullCommit);
-        }
+        // if (doCommit) {
+        commit(fullCommit);
+        // }
       });
     }
   };
